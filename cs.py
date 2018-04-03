@@ -3,9 +3,9 @@
 """
 C# CLI Helper
 
-Goal: simplify command-line usage.
+Goal: facilitate C# development in the command-line.
 
-by Laszlo Szathmary (jabba.laci@gmail.com)
+by Laszlo Szathmary (jabba.laci@gmail.com), 2018
 """
 
 import os
@@ -57,7 +57,9 @@ pub         dotnet publish                         build the app. for deployment
 
     print("""
 C# CLI Helper v{ver}
-------------------
+==================
+option            what it does                         notes
+------            ------------                         -----
 init              dotnet new console                   create a new project
 sample                                                 create / overwrite sample file Program.cs
 edit              code .                               launch VS Code
@@ -66,14 +68,16 @@ exe [params]      dotnet bin/.../*.dll [params]        execute only, don't compi
 run [params]      dotnet run [params]                  compile and execute
 test              dotnet test *.csproj                 run unit tests on the project
 test sln          dotnet test *.sln                    run unit tests on the solution
-fdd               dotnet publish -o dist -c Release    a framework-dependent deployment (output: in the dist/ folder)
-scd [RID]         dotnet publish -o dist -c Release    a self-contained deployment (output: in the dist/ folder)
-                      --runtime RID                        RID: runtime ID (ex.: win-x64, linux-x64 [default], osx-x64)
-                                                           list of RIDs: https://docs.microsoft.com/en-us/dotnet/core/rid-catalog
-                                                           Deploying .NET Core apps with CLI tools: https://goo.gl/YAhpsQ
+fdd               dotnet publish -o dist -c Release    a framework-dependent deployment (in the dist/ folder)
+scd [RID]         dotnet publish -o dist -c Release    a self-contained deployment (in the dist/ folder)
+                      --runtime RID                      RID: runtime ID (ex.: win-x64, linux-x64 [default], osx-x64)
+                                                         list of RIDs: https://goo.gl/8nNU2W
+                                                         Deploying .NET Core apps with CLI tools: https://goo.gl/YAhpsQ
 select <fname.cs> [params]                             compile and execute the given source
-                                                           Use this if you have multiple Main functions.
-                                                           It uses the main_functions.txt file.
+                                                         Use this if you have multiple Main functions.
+                                                         It uses the main_functions.txt file.
+proj                                                   show the absolute path of the .csproj file
+sln                                                    show the absolute path of the .sln file
 clean                                                  clean the project folder
 """.strip().format(ver=VERSION))
 
@@ -162,10 +166,6 @@ def process(args):
         print('#', cmd)
         os.system(cmd)
         #
-        # cmd = 'dotnet restore'
-        # print('#', cmd)
-        # os.system(cmd)
-        #
         create_sample_file()
         create_main_functions_file()
     elif param == 'sample':
@@ -237,6 +237,18 @@ def process(args):
         cmd = '{dotnet} publish -o dist -c Release --runtime {rid}'.format(dotnet=DOTNET, rid=rid)
         print('#', cmd)
         os.system(cmd)
+    elif param == 'proj':
+        try:
+            p = Path(glob("*.csproj")[0])
+            print(p.absolute())
+        except:
+            print("# Error: no .csproj file was found!")
+    elif param == 'sln':
+        try:
+            p = Path(glob("*.sln")[0])
+            print(p.absolute())
+        except:
+            print("# Error: no .sln file was found!")
     elif param == 'clean':
         clean("dist")
     else:
