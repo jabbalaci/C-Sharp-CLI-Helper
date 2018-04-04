@@ -13,7 +13,7 @@ import shlex
 import sys
 from glob import glob
 from pathlib import Path
-from subprocess import Popen
+from subprocess import PIPE, STDOUT, Popen
 
 
 VERSION = "0.3"
@@ -82,6 +82,7 @@ select <fname.cs> [params]                             compile and execute the g
                                                          It uses the main_functions.txt file.
 proj                                                   show the absolute path of the .csproj file
 sln                                                    show the absolute path of the .sln file
+ver                                                    version info
 clean                                                  clean the project folder
 """.strip().format(ver=VERSION))
 
@@ -174,6 +175,23 @@ def execute_command(cmd):
     return child.returncode
 
 
+def get_simple_cmd_output(cmd, stderr=STDOUT):
+    """Execute a simple external command and get its output.
+
+    The command contains no pipes. Error messages are
+    redirected to the standard output by default.
+    """
+    args = shlex.split(cmd)
+    return Popen(args, stdout=PIPE, stderr=stderr).communicate()[0].decode("utf8")
+
+
+def version_info():
+    dotnet = get_simple_cmd_output("dotnet --version").splitlines()[0]
+    nuget = get_simple_cmd_output("nuget").splitlines()[0].replace(" V", "  V")
+    print("dotnet version: {}".format(dotnet))
+    print(nuget)
+
+
 def process(args):
     param = args[0]
     params = " ".join(args[1:])
@@ -258,6 +276,8 @@ def process(args):
             print(p.absolute())
         except:
             print("# Error: no .sln file was found!")
+    elif param == 'ver':
+        version_info()
     elif param == 'clean':
         clean("dist")
     else:
