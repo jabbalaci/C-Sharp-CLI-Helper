@@ -6,7 +6,7 @@ if you want to develop in .NET Core using the command-line.
 
     $ cs
 
-    C# CLI Helper v0.2
+    C# CLI Helper v0.3
     ==================
     option            what it does                         notes
     ------            ------------                         -----

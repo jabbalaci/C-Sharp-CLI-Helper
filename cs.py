@@ -9,14 +9,18 @@ by Laszlo Szathmary (jabba.laci@gmail.com), 2018
 """
 
 import os
+import shlex
 import sys
 from glob import glob
 from pathlib import Path
+from subprocess import Popen
 
 
-VERSION = "0.2"
+VERSION = "0.3"
 
-DOTNET = "TERM=xterm dotnet"
+ENV = {
+    "TERM": "xterm"
+}
 
 MAIN_FUNCTIONS = "main_functions.txt"
 
@@ -157,14 +161,27 @@ def clean(dname):
     remove_dll()
 
 
+def execute_command(cmd):
+    """
+    Execute a simple external command and return its exit status.
+    """
+    my_env = os.environ.copy()
+    my_env.update(ENV)
+    print('#', cmd)
+    args = shlex.split(cmd)
+    child = Popen(args, env=my_env)
+    child.communicate()
+    return child.returncode
+
+
 def process(args):
     param = args[0]
     params = " ".join(args[1:])
+    exit_code = 0
     #
     if param == 'init':
-        cmd = '{dotnet} new console'.format(dotnet=DOTNET)
-        print('#', cmd)
-        os.system(cmd)
+        cmd = 'dotnet new console'
+        exit_code = execute_command(cmd)
         #
         create_sample_file()
         create_main_functions_file()
@@ -172,12 +189,10 @@ def process(args):
         create_sample_file()
     elif param == 'edit':
         cmd = 'code .'
-        print('#', cmd)
-        os.system(cmd)
+        exit_code = execute_command(cmd)
     elif param == 'run':
-        cmd = '{dotnet} run {params}'.format(dotnet=DOTNET, params=params)
-        print('#', cmd)
-        os.system(cmd)
+        cmd = 'dotnet run {params}'.format(params=params)
+        exit_code = execute_command(cmd)
     elif param == 'test':
         sln = False
         try:
@@ -193,9 +208,9 @@ def process(args):
         except IndexError:
             print("# Error: no {what} file was found!".format(what=what_to_search))
         else:    # noexcept
-            cmd = "{dotnet} test {what}".format(dotnet=DOTNET, what=what)
+            cmd = "dotnet test {what}".format(what=what)
             print("#", cmd)
-            os.system(cmd)
+            exit_code = execute_command(cmd)
     elif param == 'select':
         fname = args[1]
         params = " ".join(args[2:])
@@ -204,39 +219,33 @@ def process(args):
             print("# Error! The given file name was not found in {fname}!".format(fname=MAIN_FUNCTIONS))
         else:
             remove_dll()
-            cmd = "{dotnet} build /p:StartupObject={value}".format(dotnet=DOTNET, value=value)
+            cmd = "dotnet build /p:StartupObject={value}".format(value=value)
             print("#", cmd)
-            os.system(cmd)
+            exit_code = execute_command(cmd)
             #
-            cmd = '{dotnet} run {params}'.format(dotnet=DOTNET, params=params)
-            print('#', cmd)
-            os.system(cmd)
+            cmd = 'dotnet run {params}'.format(params=params)
+            exit_code = execute_command(cmd)
     elif param == 'comp':
-        cmd = '{dotnet} build'.format(dotnet=DOTNET)
-        print('#', cmd)
-        os.system(cmd)
+        cmd = 'dotnet build'
+        exit_code = execute_command(cmd)
     elif param == 'exe':
         dll = glob("bin/Debug/netcoreapp*/*.dll")[0]
-        cmd = '{dotnet} {dll} {params}'.format(dotnet=DOTNET, dll=dll, params=params)
-        print('#', cmd)
-        os.system(cmd)
+        cmd = 'dotnet {dll} {params}'.format(dll=dll, params=params)
+        exit_code = execute_command(cmd)
     elif param == 'pub':
-        cmd = '{dotnet} publish'.format(dotnet=DOTNET)
-        print('#', cmd)
-        os.system(cmd)
+        cmd = 'dotnet publish'
+        exit_code = execute_command(cmd)
     elif param == 'fdd':
-        cmd = '{dotnet} publish -o dist -c Release'.format(dotnet=DOTNET)
-        print('#', cmd)
-        os.system(cmd)
+        cmd = 'dotnet publish -o dist -c Release'
+        exit_code = execute_command(cmd)
     elif param == 'scd':
         rid = 'linux-x64'    # default
         try:
             rid = args[1]
         except IndexError:
             pass
-        cmd = '{dotnet} publish -o dist -c Release --runtime {rid}'.format(dotnet=DOTNET, rid=rid)
-        print('#', cmd)
-        os.system(cmd)
+        cmd = 'dotnet publish -o dist -c Release --runtime {rid}'.format(rid=rid)
+        exit_code = execute_command(cmd)
     elif param == 'proj':
         try:
             p = Path(glob("*.csproj")[0])
@@ -253,15 +262,17 @@ def process(args):
         clean("dist")
     else:
         print("Error: unknown parameter")
+    #
+    return exit_code
 
 
 def main():
     if len(sys.argv) == 1:
         usage()
     else:
-        process(sys.argv[1:])
+        return process(sys.argv[1:])
 
 ##############################################################################
 
 if __name__ == "__main__":
-    main()
+    exit(main())
