@@ -28,6 +28,7 @@ if you want to develop in .NET Core using the command-line.
                                                              It uses the main_functions.txt file.
     proj                                                   show the absolute path of the .csproj file
     sln                                                    show the absolute path of the .sln file
+    ver                                                    version info
     clean                                                  clean the project folder
 
 Example

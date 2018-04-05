@@ -289,8 +289,9 @@ def process(args):
 def main():
     if len(sys.argv) == 1:
         usage()
-    else:
-        return process(sys.argv[1:])
+        return 0;
+    # else
+    return process(sys.argv[1:])
 
 ##############################################################################
 
