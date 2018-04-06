@@ -13,6 +13,7 @@ if you want to develop in .NET Core using the command-line.
     init              dotnet new console                   create a new project
     sample                                                 create / overwrite sample file Program.cs
     edit              code .                               launch VS Code
+    restore           dotnet restore                       restore dependencies
     comp              dotnet build                         compile only, build for local dev.
     exe [params]      dotnet bin/.../*.dll [params]        execute only, don't compile
     run [params]      dotnet run [params]                  compile and execute
