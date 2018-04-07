@@ -231,7 +231,6 @@ def process(args):
             print("# Error: no {what} file was found!".format(what=what_to_search))
         else:    # noexcept
             cmd = "dotnet test {what}".format(what=what)
-            print("#", cmd)
             exit_code = execute_command(cmd)
     elif param == 'select':
         fname = args[1]
