@@ -71,8 +71,7 @@ restore           dotnet restore                       restore dependencies
 comp              dotnet build                         compile only, build for local dev.
 exe [params]      dotnet bin/.../*.dll [params]        execute only, don't compile
 run [params]      dotnet run [params]                  compile and execute
-test              dotnet test *.csproj                 run unit tests on the project
-test sln          dotnet test *.sln                    run unit tests on the solution
+test              dotnet test                          run unit tests (if *Test/ dir. was found, run on it)
 fdd               dotnet publish -o dist -c Release    a framework-dependent deployment (in the dist/ folder)
 scd [RID]         dotnet publish -o dist -c Release    a self-contained deployment (in the dist/ folder)
                       --runtime RID                      RID: runtime ID (ex.: win-x64, linux-x64 [default], osx-x64)
@@ -81,8 +80,8 @@ scd [RID]         dotnet publish -o dist -c Release    a self-contained deployme
 select <fname.cs> [params]                             compile and execute the given source
                                                          Use this if you have multiple Main functions.
                                                          It uses the main_functions.txt file.
-proj                                                   show the absolute path of the .csproj file
-sln                                                    show the absolute path of the .sln file
+open                                                   show the path of the .sln file
+                                                         if not found, show the path of the .csproj file
 ver                                                    version info
 clean                                                  clean the project folder
 """.strip().format(ver=VERSION))
@@ -216,22 +215,13 @@ def process(args):
         cmd = 'dotnet restore'
         exit_code = execute_command(cmd)
     elif param == 'test':
-        sln = False
-        try:
-            if args[1] == "sln":
-                sln = True
-        except IndexError:
-            pass
-        what_to_search = "*.csproj"
-        if sln:
-            what_to_search = "*.sln"
-        try:
-            what = glob(what_to_search)[0]
-        except IndexError:
-            print("# Error: no {what} file was found!".format(what=what_to_search))
-        else:    # noexcept
-            cmd = "dotnet test {what}".format(what=what)
-            exit_code = execute_command(cmd)
+        cmd = 'dotnet test'
+        #
+        dirs = [entry for entry in os.listdir() if os.path.isdir(entry) and entry.endswith("Test")]
+        if len(dirs) == 1:
+            cmd = 'dotnet test {dname}'.format(dname=dirs[0])
+        #
+        exit_code = execute_command(cmd)
     elif param == 'select':
         fname = args[1]
         params = " ".join(args[2:])
@@ -267,18 +257,17 @@ def process(args):
             pass
         cmd = 'dotnet publish -o dist -c Release --runtime {rid}'.format(rid=rid)
         exit_code = execute_command(cmd)
-    elif param == 'proj':
-        try:
-            p = Path(glob("*.csproj")[0])
-            print(p.absolute())
-        except:
-            print("# Error: no .csproj file was found!")
-    elif param == 'sln':
+    elif param == 'open':
         try:
             p = Path(glob("*.sln")[0])
             print(p.absolute())
         except:
-            print("# Error: no .sln file was found!")
+            print("# no .sln file was found")
+            try:
+                p = Path(glob("*.csproj")[0])
+                print(p.absolute())
+            except:
+                print("# no .csproj file was found")
     elif param == 'ver':
         version_info()
     elif param == 'clean':
