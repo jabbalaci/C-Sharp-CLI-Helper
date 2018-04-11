@@ -262,12 +262,12 @@ def process(args):
             p = Path(glob("*.sln")[0])
             print(p.absolute())
         except:
-            print("# no .sln file was found")
+            print("# no .sln file was found", file=sys.stderr)
             try:
                 p = Path(glob("*.csproj")[0])
                 print(p.absolute())
             except:
-                print("# no .csproj file was found")
+                print("# no .csproj file was found", file=sys.stderr)
     elif param == 'ver':
         version_info()
     elif param == 'clean':
