@@ -220,6 +220,14 @@ def process(args):
         dirs = [entry for entry in os.listdir() if os.path.isdir(entry) and entry.endswith("Test")]
         if len(dirs) == 1:
             cmd = 'dotnet test {dname}'.format(dname=dirs[0])
+        else:    # no Test dir. was found
+            sln = glob("*.sln")
+            if len(sln) == 1:
+                cmd = 'dotnet test {sln}'.format(sln=sln[0])
+            else:    # no .sln was found
+                proj = glob("*.csproj")
+                if len(proj) == 1:
+                    cmd = 'dotnet test {proj}'.format(proj=proj[0])
         #
         exit_code = execute_command(cmd)
     elif param == 'select':
