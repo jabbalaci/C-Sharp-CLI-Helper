@@ -203,6 +203,8 @@ def process(args):
         #
         create_sample_file()
         create_main_functions_file()
+        p = Path(glob("*.csproj")[0])
+        print('#', p.absolute())
     elif param == 'sample':
         create_sample_file()
     elif param == 'edit':
