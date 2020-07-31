@@ -26,7 +26,7 @@ MAIN_FUNCTIONS = "main_functions.txt"
 
 CURRENT_DIR_NAME = Path(os.getcwd()).name
 
-TEMPLATE = """
+SAMPLE1 = """
 using System;
 using static System.Console;
 using System.Linq;
@@ -38,6 +38,33 @@ namespace SampleApp
     class Program
     {
         public static void Main(string[] args)
+        {
+            WriteLine("Hello World!");
+        }
+    }
+}
+""".strip().replace("SampleApp", CURRENT_DIR_NAME)
+
+SAMPLE2 = """
+using System;
+using static System.Console;
+using System.Linq;
+using System.Collections;
+using System.Collections.Generic;
+
+namespace HelloWorld
+{
+    class Program
+    {
+        public static void Main(string[] args)
+        {
+            var p = new Program();
+            p.Start(args);
+        }
+
+        // --------------------
+
+        void Start(string[] args)
         {
             WriteLine("Hello World!");
         }
@@ -66,6 +93,7 @@ option            what it does                         notes
 ------            ------------                         -----
 init              dotnet new console                   create a new project
 sample                                                 create / overwrite sample file Program.cs
+sample2                                                create / overwrite sample file Program.cs
 edit              code .                               launch VS Code
 restore           dotnet restore                       restore dependencies
 comp              dotnet build                         compile only, build for local dev.
@@ -90,20 +118,26 @@ clean                                                  clean the project folder 
 """.strip().format(ver=VERSION))
 
 
-def create_sample_file():
+def create_sample_file(param):
 
-    def create_file():
+    def create_file(param):
+        assert(param in ("sample", "sample2"))
+        #
+        use = SAMPLE1  # default
+        if param == "sample2":
+            use = SAMPLE2
+        #
         with open("Program.cs", "w") as f:
-            f.write(TEMPLATE)
+            f.write(use)
 
     if not os.path.isfile("Program.cs"):
-        create_file()
+        create_file(param)
         print("# sample file created")
     else:    # Program.cs exists
         res = input("> Program.cs exists. Overwrite (Y/n)? ").strip().lower()
-        if res in ["", "y"]:
-            create_file()
-            print("# overwritten")
+        if res in ("", "y"):
+            create_file(param)
+            print(f"# overwritten with {param}")
         else:
             print("# no")
 
@@ -220,8 +254,8 @@ def process(args):
         create_main_functions_file()
         p = Path(glob("*.csproj")[0])
         print('#', p.absolute())
-    elif param == 'sample':
-        create_sample_file()
+    elif param in ('sample', 'sample2'):
+        create_sample_file(param)
     elif param == 'edit':
         cmd = 'code .'
         exit_code = execute_command(cmd)
