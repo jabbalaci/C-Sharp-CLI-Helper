@@ -5,18 +5,18 @@ C# CLI Helper
 
 Goal: facilitate C# development in the command-line.
 
-by Laszlo Szathmary (jabba.laci@gmail.com), 2018
+by Laszlo Szathmary (jabba.laci@gmail.com), 2018--2020
 """
 
 import os
 import shlex
+import shutil
 import sys
 from glob import glob
 from pathlib import Path
 from subprocess import PIPE, STDOUT, Popen
 
-
-VERSION = "0.3"
+VERSION = "0.3.1"
 
 ENV = {
     "TERM": "xterm"
@@ -61,7 +61,7 @@ pub         dotnet publish                         build the app. for deployment
 
     print("""
 C# CLI Helper v{ver}
-==================
+====================
 option            what it does                         notes
 ------            ------------                         -----
 init              dotnet new console                   create a new project
@@ -77,13 +77,16 @@ scd [RID]         dotnet publish -o dist -c Release    a self-contained deployme
                       --runtime RID                      RID: runtime ID (ex.: win-x64, linux-x64 [default], osx-x64)
                                                          list of RIDs: https://goo.gl/8nNU2W
                                                          Deploying .NET Core apps with CLI tools: https://goo.gl/YAhpsQ
+scd1                                                   like `scd`, but it produces a single (but big) EXE file
+scd1s                                                  like `scd1`, but it produces a smaller, single EXE file
 select <fname.cs> [params]                             compile and execute the given source
                                                          Use this if you have multiple Main functions.
                                                          It uses the main_functions.txt file.
 open                                                   show the path of the .sln file
                                                          if not found, show the path of the .csproj file
 ver                                                    version info
-clean                                                  clean the project folder
+space                                                  show disk usage of the project folder
+clean                                                  clean the project folder (remove bin/, dist/, obj/)
 """.strip().format(ver=VERSION))
 
 
@@ -149,17 +152,20 @@ def read_value_from_file(fname):
     return None
 
 
-def clean(dname):
+def clean(dnames):
     if not check_if_in_project_dir():
         print("# Error: it seems you are not in the root of a project folder!")
         return
 
-    if os.path.isdir(dname):
-        for fname in glob("{dir}/*".format(dir=dname)):
-            os.unlink(fname)
-        print("# {dir}/ cleaned".format(dir=dname))
+    for dname in dnames:
+        try:
+            shutil.rmtree(dname)
+            print(f"# {dname}/ was cleaned")
+            os.mkdir(dname)
+        except:
+            pass
 
-    remove_dll()
+    # remove_dll()
 
 
 def execute_command(cmd):
@@ -173,6 +179,15 @@ def execute_command(cmd):
     child = Popen(args, env=my_env)
     child.communicate()
     return child.returncode
+
+
+def show_disk_usage():
+    if not check_if_in_project_dir():
+        print("# Error: it seems you are not in the root of a project folder!")
+        return
+
+    cmd = "du -sk ."
+    execute_command(cmd)
 
 
 def get_simple_cmd_output(cmd, stderr=STDOUT):
@@ -259,13 +274,17 @@ def process(args):
     elif param == 'fdd':
         cmd = 'dotnet publish -o dist -c Release'
         exit_code = execute_command(cmd)
-    elif param == 'scd':
+    elif param in ('scd', 'scd1', 'scd1s'):
         rid = 'linux-x64'    # default
         try:
             rid = args[1]
         except IndexError:
             pass
         cmd = 'dotnet publish -o dist -c Release --runtime {rid}'.format(rid=rid)
+        if param in ('scd1', 'scd1s'):
+            cmd += " /p:PublishSingleFile=true"
+        if param == 'scd1s':
+            cmd += " /p:PublishTrimmed=true"
         exit_code = execute_command(cmd)
     elif param == 'open':
         try:
@@ -280,8 +299,10 @@ def process(args):
                 print("# no .csproj file was found", file=sys.stderr)
     elif param == 'ver':
         version_info()
+    elif param == 'space':
+        show_disk_usage()
     elif param == 'clean':
-        clean("dist")
+        clean(["bin", "dist", "obj"])
     else:
         print("Error: unknown parameter")
     #
