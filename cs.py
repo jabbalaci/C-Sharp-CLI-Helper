@@ -250,7 +250,7 @@ def process(args):
         cmd = 'dotnet new console'
         exit_code = execute_command(cmd)
         #
-        create_sample_file()
+        create_sample_file("sample2")
         create_main_functions_file()
         p = Path(glob("*.csproj")[0])
         print('#', p.absolute())
