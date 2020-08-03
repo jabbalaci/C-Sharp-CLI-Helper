@@ -39,34 +39,7 @@ namespace SampleApp
     {
         public static void Main(string[] args)
         {
-            WriteLine("Hello World!");
-        }
-    }
-}
-""".strip().replace("SampleApp", CURRENT_DIR_NAME)
-
-SAMPLE2 = """
-using System;
-using static System.Console;
-using System.Linq;
-using System.Collections;
-using System.Collections.Generic;
-
-namespace HelloWorld
-{
-    class Program
-    {
-        public static void Main(string[] args)
-        {
-            var p = new Program();
-            p.Start(args);
-        }
-
-        // --------------------
-
-        void Start(string[] args)
-        {
-            WriteLine("Hello World!");
+            WriteLine("hello");
         }
     }
 }
@@ -93,9 +66,10 @@ option            what it does                         notes
 ------            ------------                         -----
 init              dotnet new console                   create a new project
 sample                                                 create / overwrite sample file Program.cs
-sample2                                                create / overwrite sample file Program.cs
 edit              code .                               launch VS Code
 restore           dotnet restore                       restore dependencies
+add <pkg>         dotnet add package <pkg>             add the given package as a dependency
+proj              cat *.csproj                         show the content of the .csproj file
 comp              dotnet build                         compile only, build for local dev.
 exe [params]      dotnet bin/.../*.dll [params]        execute only, don't compile
 run [params]      dotnet run [params]                  compile and execute
@@ -121,11 +95,7 @@ clean                                                  clean the project folder 
 def create_sample_file(param):
 
     def create_file(param):
-        assert(param in ("sample", "sample2"))
-        #
         use = SAMPLE1  # default
-        if param == "sample2":
-            use = SAMPLE2
         #
         with open("Program.cs", "w") as f:
             f.write(use)
@@ -241,6 +211,21 @@ def version_info():
     print(nuget)
 
 
+def show_project_file():
+    try:
+        p = Path(glob("*.csproj")[0])
+        print(f"# cat {p}")
+        with open(p) as f:
+            for line in f:
+                sys.stdout.write(line)
+            #
+        #
+        return 0
+    except:
+        print("# no .csproj file was found", file=sys.stderr)
+        return 1
+
+
 def process(args):
     param = args[0]
     params = " ".join(args[1:])
@@ -250,11 +235,11 @@ def process(args):
         cmd = 'dotnet new console'
         exit_code = execute_command(cmd)
         #
-        create_sample_file("sample2")
+        create_sample_file("sample")
         create_main_functions_file()
         p = Path(glob("*.csproj")[0])
         print('#', p.absolute())
-    elif param in ('sample', 'sample2'):
+    elif param in ('sample', ):
         create_sample_file(param)
     elif param == 'edit':
         cmd = 'code .'
@@ -282,19 +267,35 @@ def process(args):
         #
         exit_code = execute_command(cmd)
     elif param == 'select':
-        fname = args[1]
-        params = " ".join(args[2:])
-        value = read_value_from_file(fname)
-        if not value:
-            print("# Error! The given file name was not found in {fname}!".format(fname=MAIN_FUNCTIONS))
-        else:
-            remove_dll()
-            cmd = "dotnet build /p:StartupObject={value}".format(value=value)
-            print("#", cmd)
+        ok = True
+        try:
+            fname = args[1]
+        except IndexError:
+            print("Error: missing file name")
+            exit_code = 1
+            ok = False
+        #
+        if ok:
+            params = " ".join(args[2:])
+            value = read_value_from_file(fname)
+            if not value:
+                print("# Error! The given file name was not found in {fname}!".format(fname=MAIN_FUNCTIONS))
+            else:
+                remove_dll()
+                cmd = "dotnet build /p:StartupObject={value}".format(value=value)
+                print("#", cmd)
+                exit_code = execute_command(cmd)
+                #
+                cmd = 'dotnet run {params}'.format(params=params)
+                exit_code = execute_command(cmd)
+    elif param == 'add':
+        try:
+            pkg = args[1]
+            cmd = f'dotnet add package {pkg}'
             exit_code = execute_command(cmd)
-            #
-            cmd = 'dotnet run {params}'.format(params=params)
-            exit_code = execute_command(cmd)
+        except IndexError:
+            print("Error: missing package name")
+            exit_code = 1
     elif param == 'comp':
         cmd = 'dotnet build'
         exit_code = execute_command(cmd)
@@ -337,6 +338,8 @@ def process(args):
         show_disk_usage()
     elif param == 'clean':
         clean(["bin", "dist", "obj"])
+    elif param == 'proj':
+        exit_code = show_project_file()
     else:
         print("Error: unknown parameter")
     #
