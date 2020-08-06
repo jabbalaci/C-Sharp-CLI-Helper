@@ -81,9 +81,6 @@ scd [RID]         dotnet publish -o dist -c Release    a self-contained deployme
                                                          Deploying .NET Core apps with CLI tools: https://goo.gl/YAhpsQ
 scd1                                                   like `scd`, but it produces a single (but big) EXE file
 scd1s                                                  like `scd1`, but it produces a smaller, single EXE file
-select <fname.cs> [params]                             compile and execute the given source
-                                                         Use this if you have multiple Main functions.
-                                                         It uses the main_functions.txt file.
 open                                                   show the path of the .sln file
                                                          if not found, show the path of the .csproj file
 ver                                                    version info
@@ -91,6 +88,9 @@ space                                                  show disk usage of the pr
 clean                                                  clean the project folder (remove bin/, dist/, obj/)
 """.strip().format(ver=VERSION))
 
+# select <fname.cs> [params]                             compile and execute the given source
+#                                                          Use this if you have multiple Main functions.
+#                                                          It uses the main_functions.txt file.
 
 def create_sample_file(param):
 
