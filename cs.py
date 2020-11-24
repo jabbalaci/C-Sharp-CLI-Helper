@@ -3,7 +3,7 @@
 """
 C# CLI Helper
 
-Goal: facilitate C# development in the command-line.
+Goal: facilitate C# development in the command-line
 
 by Laszlo Szathmary (jabba.laci@gmail.com), 2018--2020
 """
@@ -16,7 +16,7 @@ from glob import glob
 from pathlib import Path
 from subprocess import PIPE, STDOUT, Popen
 
-VERSION = "0.3.1"
+VERSION = "0.3.2"
 
 ENV = {
     "TERM": "xterm"
@@ -33,9 +33,9 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace SampleApp
+namespace Example
 {
-    class Program
+    public class Program
     {
         public static void Main(string[] args)
         {
@@ -43,7 +43,7 @@ namespace SampleApp
         }
     }
 }
-""".strip().replace("SampleApp", CURRENT_DIR_NAME)
+""".strip()    #.replace("SampleApp", CURRENT_DIR_NAME)
 
 MAIN_FUNCTIONS_CONTENT = """
 # Specify a filename and after the "=" sign indicate the
