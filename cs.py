@@ -236,7 +236,7 @@ def process(args):
         exit_code = execute_command(cmd)
         #
         create_sample_file("sample")
-        create_main_functions_file()
+        # create_main_functions_file()    # let's disable it
         p = Path(glob("*.csproj")[0])
         print('#', p.absolute())
     elif param in ('sample', ):
