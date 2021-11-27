@@ -5,7 +5,7 @@ C# CLI Helper
 
 Goal: facilitate C# development in the command-line
 
-by Laszlo Szathmary (jabba.laci@gmail.com), 2018--2020
+by Laszlo Szathmary (jabba.laci@gmail.com), 2018--2021
 """
 
 import os
@@ -16,7 +16,7 @@ from glob import glob
 from pathlib import Path
 from subprocess import PIPE, STDOUT, Popen
 
-VERSION = "0.3.2"
+VERSION = "0.3.3"
 
 ENV = {
     "TERM": "xterm"
@@ -300,7 +300,7 @@ def process(args):
         cmd = 'dotnet build'
         exit_code = execute_command(cmd)
     elif param == 'exe':
-        dll = glob("bin/Debug/netcoreapp*/*.dll")[0]
+        dll = glob("bin/Debug/net*/*.dll")[0]
         cmd = 'dotnet {dll} {params}'.format(dll=dll, params=params)
         exit_code = execute_command(cmd)
     elif param == 'pub':
