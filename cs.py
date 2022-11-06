@@ -5,7 +5,7 @@ C# CLI Helper
 
 Goal: facilitate C# development in the command-line
 
-by Laszlo Szathmary (jabba.laci@gmail.com), 2018--2021
+by Laszlo Szathmary (jabba.laci@gmail.com), 2018--2022
 """
 
 import os
@@ -14,9 +14,9 @@ import shutil
 import sys
 from glob import glob
 from pathlib import Path
-from subprocess import PIPE, STDOUT, Popen
+from subprocess import PIPE, STDOUT, Popen, DEVNULL
 
-VERSION = "0.3.3"
+VERSION = "0.3.4"
 
 ENV = {
     "TERM": "xterm"
@@ -73,6 +73,7 @@ proj              cat *.csproj                         show the content of the .
 comp              dotnet build                         compile only, build for local dev.
 exe [params]      dotnet bin/.../*.dll [params]        execute only, don't compile
 run [params]      dotnet run [params]                  compile and execute
+run2 [params]                                          compile and execute (patch for Ubuntu 20.04 if `run` doesn't work)
 test              dotnet test                          run unit tests (if *Test/ dir. was found, run on it)
 fdd               dotnet publish -o dist -c Release    a framework-dependent deployment (in the dist/ folder)
 scd [RID]         dotnet publish -o dist -c Release    a self-contained deployment (in the dist/ folder)
@@ -172,15 +173,21 @@ def clean(dnames):
     # remove_dll()
 
 
-def execute_command(cmd):
+def execute_command(cmd, silent=False, line=False):
     """
     Execute a simple external command and return its exit status.
     """
     my_env = os.environ.copy()
     my_env.update(ENV)
     print('#', cmd)
+    if line:
+        print("# ---")
     args = shlex.split(cmd)
-    child = Popen(args, env=my_env)
+    if silent:
+        child = Popen(args, env=my_env, stdout=DEVNULL)
+    else:    
+        child = Popen(args, env=my_env)
+    #
     child.communicate()
     return child.returncode
 
@@ -205,10 +212,17 @@ def get_simple_cmd_output(cmd, stderr=STDOUT):
 
 
 def version_info():
-    dotnet = get_simple_cmd_output("dotnet --version").splitlines()[0]
-    nuget = get_simple_cmd_output("nuget").splitlines()[0].replace(" V", "  V")
-    print("dotnet version: {}".format(dotnet))
-    print(nuget)
+    try:
+        dotnet = get_simple_cmd_output("dotnet --version").splitlines()[0]
+        print("dotnet version: {}".format(dotnet))
+    except:
+        print("Error: the command `dotnet` was not found")
+
+    try:
+        nuget = get_simple_cmd_output("nuget").splitlines()[0].replace(" V", "  V")
+        print(nuget)
+    except:
+        print("Error: the command `nuget` was not found")
 
 
 def show_project_file():
@@ -247,6 +261,13 @@ def process(args):
     elif param == 'run':
         cmd = 'dotnet run {params}'.format(params=params)
         exit_code = execute_command(cmd)
+    elif param == 'run2':
+        cmd = 'dotnet build'
+        exit_code = execute_command(cmd)
+        if exit_code == 0:
+            dll = glob("bin/Debug/net*/*.dll")[0]
+            cmd = 'dotnet {dll} {params}'.format(dll=dll, params=params)
+            exit_code = execute_command(cmd, line=True)
     elif param == 'restore':
         cmd = 'dotnet restore'
         exit_code = execute_command(cmd)
