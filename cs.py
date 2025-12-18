@@ -16,7 +16,7 @@ from glob import glob
 from pathlib import Path
 from subprocess import DEVNULL, PIPE, STDOUT, Popen
 
-VERSION = "0.3.5"
+VERSION = "0.3.6"
 
 ENV = {"TERM": "xterm"}
 
@@ -108,9 +108,7 @@ open                                                   show the path of the .sln
 ver                                                    version info
 space                                                  show disk usage of the project folder
 clean                                                  clean the project folder (remove bin/, dist/, obj/)
-""".strip().format(
-            ver=VERSION
-        )
+""".strip().format(ver=VERSION)
     )
 
 
@@ -140,7 +138,10 @@ def create_sample_file(sample_code: str) -> None:
 
 def create_main_functions_file() -> None:
     if os.path.isfile(MAIN_FUNCTIONS):
-        print("# Warning: the file {fname} already exists!".format(fname=MAIN_FUNCTIONS))
+        print(
+            "# Warning: the file {fname} already exists!".format(fname=MAIN_FUNCTIONS),
+            file=sys.stderr,
+        )
         return
 
     with open(MAIN_FUNCTIONS, "w") as f:
@@ -155,7 +156,10 @@ def check_if_in_project_dir() -> bool:
 
 def remove_dll() -> None:
     if not check_if_in_project_dir():
-        print("# Error: it seems you are not in the root of a project folder!")
+        print(
+            "# Error: it seems you are not in the root of a project folder!",
+            file=sys.stderr,
+        )
         return
 
     try:
@@ -184,7 +188,10 @@ def read_value_from_file(fname: str) -> str | None:
 
 def clean(dnames: list[str]) -> None:
     if not check_if_in_project_dir():
-        print("# Error: it seems you are not in the root of a project folder!")
+        print(
+            "# Error: it seems you are not in the root of a project folder!",
+            file=sys.stderr,
+        )
         return
 
     for dname in dnames:
@@ -204,9 +211,9 @@ def execute_command(cmd: str, silent=False, line=False) -> int:
     """
     my_env = os.environ.copy()
     my_env.update(ENV)
-    print("#", cmd)
+    print("#", cmd, file=sys.stderr)
     if line:
-        print("# ---")
+        print("# ---", file=sys.stderr)
     args = shlex.split(cmd)
     if silent:
         child = Popen(args, env=my_env, stdout=DEVNULL)
@@ -241,13 +248,13 @@ def version_info() -> None:
         dotnet = get_simple_cmd_output("dotnet --version").splitlines()[0]
         print("dotnet version: {}".format(dotnet))
     except:
-        print("Error: the command `dotnet` was not found")
+        print("Error: the command `dotnet` was not found", file=sys.stderr)
 
     try:
         nuget = get_simple_cmd_output("nuget").splitlines()[0].replace(" V", "  V")
         print(nuget)
     except:
-        print("Error: the command `nuget` was not found")
+        print("Error: the command `nuget` was not found", file=sys.stderr)
 
 
 def show_project_file() -> int:
@@ -301,7 +308,11 @@ def process(args: list[str]) -> int:
     elif param == "test":
         cmd = "dotnet test"
         #
-        dirs = [entry for entry in os.listdir() if os.path.isdir(entry) and entry.endswith("Test")]
+        dirs = [
+            entry
+            for entry in os.listdir()
+            if os.path.isdir(entry) and entry.endswith("Test")
+        ]
         if len(dirs) == 1:
             cmd = "dotnet test {dname}".format(dname=dirs[0])
         else:  # no Test dir. was found
@@ -319,7 +330,7 @@ def process(args: list[str]) -> int:
         try:
             fname = args[1]
         except IndexError:
-            print("Error: missing file name")
+            print("Error: missing file name", file=sys.stderr)
             exit_code = 1
             ok = False
         #
@@ -330,7 +341,8 @@ def process(args: list[str]) -> int:
                 print(
                     "# Error! The given file name was not found in {fname}!".format(
                         fname=MAIN_FUNCTIONS
-                    )
+                    ),
+                    file=sys.stderr,
                 )
             else:
                 remove_dll()
@@ -346,7 +358,7 @@ def process(args: list[str]) -> int:
             cmd = f"dotnet add package {pkg}"
             exit_code = execute_command(cmd)
         except IndexError:
-            print("Error: missing package name")
+            print("Error: missing package name", file=sys.stderr)
             exit_code = 1
     elif param == "comp":
         cmd = "dotnet build"
@@ -393,7 +405,7 @@ def process(args: list[str]) -> int:
     elif param == "proj":
         exit_code = show_project_file()
     else:
-        print("Error: unknown parameter")
+        print("Error: unknown parameter", file=sys.stderr)
     #
     return exit_code
 
